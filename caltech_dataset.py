@@ -15,6 +15,7 @@ def pil_loader(path):
 
 
 class Caltech(VisionDataset):
+    
     def __init__(self, root, split='train', transform=None, target_transform=None):
         super(Caltech, self).__init__(root, transform=transform, target_transform=target_transform)
 
@@ -29,8 +30,21 @@ class Caltech(VisionDataset):
           through the index
         - Labels should start from 0, so for Caltech you will have lables 0...100 (excluding the background class) 
         '''
+        
+        file = open(self.split, "r")
+        lines = file.readlines()
+        
+        # Filter out the lines which start with 'BACKGROUND_Google' as asked in the homework
+        self.elements = [i for i in lines if not i.startswith('BACKGROUND_Google')]
+
+        # Delete BACKGROUND_Google class from dataset labels
+        self.classes = sorted(os.listdir(os.path.join(self.root, "")))
+        self.classes.remove("BACKGROUND_Google")
+        
+        
 
     def __getitem__(self, index):
+        
         '''
         __getitem__ should access an element through its index
         Args:
@@ -40,9 +54,13 @@ class Caltech(VisionDataset):
             tuple: (sample, target) where target is class_index of the target class.
         '''
 
-        image, label = ... # Provide a way to access image and label via index
-                           # Image should be a PIL Image
-                           # label can be int
+        img = Image.open(os.path.join(self.root, self.elements[index].rstrip()))
+
+        target = self.classes.index(self.elements[index].rstrip().split('/')[0])
+
+        image, label = img, target  # Provide a way to access image and label via index
+                                    # Image should be a PIL Image
+                                    # label can be int
 
         # Applies preprocessing when accessing the image
         if self.transform is not None:
@@ -50,10 +68,11 @@ class Caltech(VisionDataset):
 
         return image, label
 
+
     def __len__(self):
         '''
         The __len__ method returns the length of the dataset
         It is mandatory, as this is used by several other components
         '''
-        length = ... # Provide a way to get the length (number of elements) of the dataset
+        length = len(self.elements) # Provide a way to get the length (number of elements) of the dataset
         return length
